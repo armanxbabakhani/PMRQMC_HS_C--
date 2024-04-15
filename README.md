@@ -4,7 +4,6 @@
 
 - [Introduction](#introduction)
 - [The Code](#thecode)
-- [Examples](#examples)
 - [Contributions](#contributions)
 - [License](#license)
 
@@ -18,11 +17,32 @@ The code consists of two parts, descibed as follows.
 
 ### A. Data to PMR (DatatoPMR.h)
 
-This header file provides all the necessary functions to convert the pauli string input data provided by the user into PMR representation. The data structure describing the PMR formalism is as follows
+This header file provides all the necessary functions to convert the pauli string input data provided by the user into PMR representation. The data structure describing the PMR formalism is the following 
 
-## Examples
+```
+typedef vector<vector<complex<double>>> Coeffs;
+typedef vector<vector<int>> ParticlePerm;
+typedef vector<vector<pair<int,int>>> TotalPerms;
+typedef pair<int,int> ParticleDiag;
 
-Provide examples demonstrating the usage of the project.
+struct TotalDiag {
+    int ztype , k , particle;
+};
+
+typedef vector<vector<vector<ParticleDiag>>> ParticleDVecs;
+typedef vector<vector<vector<TotalDiag>>> TotalDVecs;
+typedef pair<vector<int> , pair<vector<ParticleDiag> , vector<complex<double>>>> PauliCDPs;
+
+struct PDdata {
+    int twoSplusOne , NumOfParticles;
+    TotalPerms Permutations;
+    TotalDVecs Diagonals;
+    Coeffs Coefficients;
+    vector<vector<TotalDiag>> D0;
+    vector<complex<double>> D0Coeffs;
+};
+```
+In the DatatoPMR.hpp ParticlePerm data type is used to extract the permutation for a particular particle. For example, $X_1 ^2$ would produce a $P^0$, $P^1$, and a $P^2$ term. So, the powers of the permutation would be stored in the form of a ParticlePerm data structure as [0,1,2] .
 
 ## Contributions
 
@@ -31,12 +51,3 @@ The main contributors to the code are Lev Barash and Arman Babakhani. The main c
 ## License
 
 Specify the project's license.
-
-
- 
-
-
-
-##### PMR Data Structure for High Spins
-
-$C
