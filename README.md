@@ -5,7 +5,7 @@
 - [Introduction](#introduction)
 - [The Code](#thecode)
 - [Examples](#examples)
-- [Contributing](#contributing)
+- [Contributions](#contributions)
 - [License](#license)
 
 ## Introduction
@@ -24,9 +24,9 @@ This header file provides all the necessary functions to convert the pauli strin
 
 Provide examples demonstrating the usage of the project.
 
-## Contributing
+## Contributions
 
-Include guidelines for contributing to the project, such as how to report issues or submit pull requests.
+The main contributors to the code are Lev Barash and Arman Babakhani. The main contributions to designing the algorithm has been done by Prof. Itay Hen.
 
 ## License
 
