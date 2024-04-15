@@ -1,0 +1,102 @@
+Preparing PMR for the Hamiltonian and computing the list of fundamental cycles...done
+RNG seed = 136227718
+Parameters: beta = 1, Tsteps = 1000000, steps = 10000000
+mean(sgn(W)) = 0.99298
+std.dev.(sgn(W)) = 0.000824863625
+Warning: cycle No. 22 of length 6 was not used
+Warning: cycle No. 23 of length 7 was not used
+Warning: cycle No. 24 of length 6 was not used
+Warning: cycle No. 25 of length 7 was not used
+Warning: cycle No. 26 of length 6 was not used
+Warning: cycle No. 27 of length 7 was not used
+Warning: cycle No. 28 of length 6 was not used
+Warning: cycle No. 29 of length 7 was not used
+Warning: cycle No. 30 of length 6 was not used
+Warning: cycle No. 31 of length 7 was not used
+Warning: cycle No. 32 of length 6 was not used
+Warning: cycle No. 33 of length 7 was not used
+Warning: cycle No. 34 of length 7 was not used
+Warning: cycle No. 35 of length 8 was not used
+Warning: cycle No. 36 of length 8 was not used
+Warning: cycle No. 37 of length 9 was not used
+Warning: cycle No. 38 of length 8 was not used
+Warning: cycle No. 39 of length 9 was not used
+Warning: cycle No. 40 of length 8 was not used
+Warning: cycle No. 41 of length 9 was not used
+Warning: cycle No. 42 of length 8 was not used
+Warning: cycle No. 43 of length 9 was not used
+Warning: cycle No. 44 of length 8 was not used
+Warning: cycle No. 45 of length 9 was not used
+Warning: cycle No. 46 of length 8 was not used
+Warning: cycle No. 47 of length 9 was not used
+Warning: cycle No. 48 of length 9 was not used
+Warning: cycle No. 49 of length 10 was not used
+Warning: cycle No. 50 of length 10 was not used
+Warning: cycle No. 51 of length 11 was not used
+Warning: cycle No. 52 of length 10 was not used
+Warning: cycle No. 53 of length 11 was not used
+Warning: cycle No. 54 of length 10 was not used
+Warning: cycle No. 55 of length 11 was not used
+Warning: cycle No. 56 of length 10 was not used
+Warning: cycle No. 57 of length 11 was not used
+Warning: cycle No. 58 of length 10 was not used
+Warning: cycle No. 59 of length 11 was not used
+Warning: cycle No. 60 of length 10 was not used
+Warning: cycle No. 61 of length 11 was not used
+Warning: cycle No. 62 of length 11 was not used
+Warning: cycle No. 63 of length 12 was not used
+Warning: cycle No. 64 of length 12 was not used
+Warning: cycle No. 65 of length 13 was not used
+Warning: cycle No. 66 of length 12 was not used
+Warning: cycle No. 67 of length 13 was not used
+Warning: cycle No. 68 of length 12 was not used
+Warning: cycle No. 69 of length 13 was not used
+Warning: cycle No. 70 of length 12 was not used
+Warning: cycle No. 71 of length 13 was not used
+Warning: cycle No. 72 of length 12 was not used
+Warning: cycle No. 73 of length 13 was not used
+Warning: cycle No. 74 of length 12 was not used
+Warning: cycle No. 75 of length 13 was not used
+Warning: cycle No. 76 of length 13 was not used
+Warning: cycle No. 77 of length 14 was not used
+Warning: cycle No. 78 of length 14 was not used
+Warning: cycle No. 79 of length 15 was not used
+Warning: cycle No. 80 of length 14 was not used
+Warning: cycle No. 81 of length 15 was not used
+Warning: cycle No. 82 of length 14 was not used
+Warning: cycle No. 83 of length 15 was not used
+Warning: cycle No. 84 of length 14 was not used
+Warning: cycle No. 85 of length 15 was not used
+Warning: cycle No. 86 of length 14 was not used
+Warning: cycle No. 87 of length 15 was not used
+Warning: cycle No. 88 of length 14 was not used
+Warning: cycle No. 89 of length 15 was not used
+Warning: cycle No. 90 of length 15 was not used
+Warning: cycle No. 91 of length 16 was not used
+Warning: cycle No. 92 of length 16 was not used
+Warning: cycle No. 93 of length 16 was not used
+Warning: cycle No. 94 of length 16 was not used
+Warning: cycle No. 95 of length 16 was not used
+Warning: cycle No. 96 of length 16 was not used
+Warning: cycle No. 97 of length 16 was not used
+mean(q) = 0.79177
+max(q) = 8
+Observable #1: H
+mean(O) = -52.546446
+std.dev.(O) = 0.0416527558
+Observable #2: H^2
+mean(O) = 2772.73139
+std.dev.(O) = 4.39141402
+Observable #3: H_{diag}
+mean(O) = -51.7736939
+std.dev.(O) = 0.0383874787
+Observable #4: H_{diag}^2
+mean(O) = 2693.36242
+std.dev.(O) = 3.88203499
+Observable #5: H_{offdiag}
+mean(O) = -0.772752082
+std.dev.(O) = 0.0409795272
+Observable #6: H_{offdiag}^2
+mean(O) = 2.41510457
+std.dev.(O) = 0.238782437
+wall-clock cpu time = 86.189006 seconds

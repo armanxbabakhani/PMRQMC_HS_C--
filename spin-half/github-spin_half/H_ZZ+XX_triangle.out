@@ -1,0 +1,26 @@
+Preparing PMR for the Hamiltonian and computing the list of fundamental cycles...done
+RNG seed = 1452426693
+Parameters: beta = 1, Tsteps = 1000000, steps = 10000000
+mean(sgn(W)) = 0.47132
+std.dev.(sgn(W)) = 0.00292521073
+mean(q) = 2.49842
+max(q) = 13
+Observable #1: H
+mean(O) = -1.88960504
+std.dev.(O) = 0.0153493887
+Observable #2: H^2
+mean(O) = 3.93304567
+std.dev.(O) = 0.0947408097
+Observable #3: H_{diag}
+mean(O) = -0.928465486
+std.dev.(O) = 0.00678198113
+Observable #4: H_{diag}^2
+mean(O) = 1.14306903
+std.dev.(O) = 0.0135639623
+Observable #5: H_{offdiag}
+mean(O) = -0.961139558
+std.dev.(O) = 0.0175095255
+Observable #6: H_{offdiag}^2
+mean(O) = 1.29312803
+std.dev.(O) = 0.103208914
+wall-clock cpu time = 13.903267 seconds
