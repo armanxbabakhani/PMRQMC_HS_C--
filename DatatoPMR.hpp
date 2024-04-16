@@ -382,10 +382,19 @@ bool Is_identity(vector<pair<int,int>> A){
     return true;
 }
 
+void Perm_sort(vector<pair<int, int>>& vec) {
+    // Sort the vector using a custom comparator function
+    sort(vec.begin(), vec.end(), [](const auto& lhs, const auto& rhs) {
+        return lhs.first < rhs.first;
+    });
+}
+
 bool Perm_compare(vector<pair<int,int>> A , vector<pair<int,int>> B){
     if(A.size() != B.size())
         return false;
     else{
+        Perm_sort(A);
+        Perm_sort(B);
         for(int i = 0; i < A.size(); i++){
             if(A[i]!= B[i]){
                 return false;

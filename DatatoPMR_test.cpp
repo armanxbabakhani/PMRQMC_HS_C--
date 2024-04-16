@@ -340,6 +340,9 @@ vector<vector<TotalDiag>> Diag_convert(vector<vector<ParticleDiag>> D , int Part
     return TotalDs;
 }
 
+
+
+
 void PMR_otimes(TotalPerms& PermutationSet , TotalDVecs& DiagonalSet , Coeffs& CoeffSet , vector<int> NewPermutations , ParticleDVecs NewDiagonals, Coeffs NewCoeffs, int NewParticleNo , int twoSplusOne){
     TotalPerms PermutationSet0 = PermutationSet;
     TotalDVecs DiagonalSet0 = DiagonalSet;
@@ -359,6 +362,8 @@ void PMR_otimes(TotalPerms& PermutationSet , TotalDVecs& DiagonalSet , Coeffs& C
             vector<vector<TotalDiag>> NewDj = Diag_convert(NewDiagonals[j] , NewParticleNo); 
             Diag_Multiply(DiagonalSetj[k] , CoeffSetj[k] , NewDj , NewCoeffs[j]); // Here, we are multiplying the diagonal matrices with corresponding coefficients!
         }
+        // Here make sure that the permutationsetj has no common element with permutationset!
+        // Find the permutations that already exist and append their diagonal parts
         PermutationSet.insert(PermutationSet.end() , PermutationSetj.begin() , PermutationSetj.end());
         DiagonalSet.insert(DiagonalSet.end() , DiagonalSetj.begin() , DiagonalSetj.end());
         CoeffSet.insert(CoeffSet.end() , CoeffSetj.begin() , CoeffSetj.end());
@@ -387,11 +392,20 @@ bool Is_identity(vector<pair<int,int>> A){
     }
     return true;
 }
+void Perm_sort(vector<pair<int, int>>& vec) {
+    // Sort the vector using a custom comparator function
+    sort(vec.begin(), vec.end(), [](const auto& lhs, const auto& rhs) {
+        return lhs.first < rhs.first;
+    });
+}
+
 
 bool Perm_compare(vector<pair<int,int>> A , vector<pair<int,int>> B){
     if(A.size() != B.size())
         return false;
     else{
+        Perm_sort(A);
+        Perm_sort(B);
         for(int i = 0; i < A.size(); i++){
             if(A[i]!= B[i]){
                 return false;
@@ -668,6 +682,7 @@ int main(int argc , char* argv[]){
 
     vector<vector<TotalDiag>> D0 = CDPdata.D0;
     vector<complex<double>> D0Coeffs = CDPdata.D0Coeffs;
+    cout << "The number of unique permutations are: " << PMatrices.size() << endl;
     cout << "The size of D0 is " << D0.size() << endl;
     cout << "D0 coefficient: " << D0Coeffs[0] << endl;
     // Testing diag main:
