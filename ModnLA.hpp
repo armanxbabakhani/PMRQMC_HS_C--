@@ -438,7 +438,7 @@ Matrix Modp_nullspace(const Matrix& A, int p) {
         }
         nullspace.push_back(basis_vec);
     }
-    return nullspace;
+    return Transpose(nullspace);
 }
 
 
@@ -471,13 +471,13 @@ vector<vector<int>> Modp_nullspace_r(vector<vector<int>> A , int p , int r){
         x = Modp_scalmult(p , x , pow(p,r));
         vector<vector<int>> b2trans = Transpose(b2);
         for(int i = 0; i < b2trans.size(); i++){
-            vector<vector<int>> xr = Transpose(Modp_solver(A , Transpose({b2trans[i]}) , pow( p , r-1)));
+            vector<vector<int>> xr = Modp_solver(A , Transpose({b2trans[i]}) , pow( p , r-1));
             if(!All_zeros(xr)){
-                x = Vert_conc(x , xr);
+                x = Horz_conc(x , xr);
             }
         }
         vector<vector<int>> xpr = Modp_nullspace(A , pow(p , r));
-        return Vert_conc(xpr , x);
+        return Transpose(Horz_conc(xpr , x));
     }
 }
 
@@ -527,7 +527,6 @@ vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
             int prime = ps[i].first , power = ps[i].second;
             vector<vector<int>> Nullspacei = Modp_nullspace_r(A , prime , power) , NullsiValid;
             // Checking if eigenvectors are valid , as for non-primes, there could be cases of invalid eigenvectors produced
-            
             if(power > 1){
                 for(auto& vec : Nullspacei){
                     if(Check_null(A , vec , pow(prime , power))){
@@ -535,16 +534,13 @@ vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
                     }
                 }
             }
-            //cout << "the individual nullspace for prime " << prime << " with power of " << power << endl;
-            //Print_matrix(Nullspacei);
             NullsiValid = Modp_scalmult(n/pow(prime , power) , NullsiValid, n);
-            //cout << "After scaling: " << endl;
-            //Print_matrix(Nullspacei);
-            //cout << endl;
             Null = Vert_conc(Null , NullsiValid);
         }
     }
+    Null = Transpose(Null);
     Simplify_nullspace(A , Null , n);
+    // Returning the nullspace
     return Null;
 }
 

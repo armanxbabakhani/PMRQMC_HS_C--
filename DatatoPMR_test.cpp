@@ -696,10 +696,11 @@ int main(int argc , char* argv[]){
     
     vector<vector<int>> MatrixTest = {{2, 1 , 0, 3, 0},{1,3,1,0,2},{0,1,0,0,0},{1,0,1,1,2}} , M4 = {{3,1,1,2},{1,1,2,3}};
     vector<vector<int>> M21 = {{1,0,0,0},{0,1,0,1},{1,1,1,0},{1,0,1,1}} , M31 = {{1,1,0,1 , 1},{2,1,1,0 , 1},{0,2,1,0,1},{1,0,1,2,0}} , M32 = {{1,2,0,0 ,2},{1,2,2,0 , 0},{1,2,0,1,0}};
+    vector<vector<int>> A2 = {{2, 1 , 0, 3, 0},{1,3,1,0,2},{0,1,0,0,0},{1,0,1,1,2}};
     int mod4 = 4 , mod2=2 , mod3 =3 ;
-    vector<vector<int>> n21 = Modp_nullspace(M21 , mod2);
+    vector<vector<int>> n21 = Nullspace_n(A2 , mod4);
     cout << "The permutation matrix M21 is: " << endl;
-    printMatrix(M21);
+    printMatrix(A2);
 
     if(n21.size() > 0){
         cout << "The nullspace is " << endl;
