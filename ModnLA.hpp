@@ -481,39 +481,6 @@ vector<vector<int>> Modp_nullspace_r(vector<vector<int>> A , int p , int r){
     }
 }
 
-// This function computes the mod n nullspace basis of A, where n is any integer!
-vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
-    vector<pair<int, int>> ps = Prime_decomp(n);
-    vector<vector<int>> Null;
-
-    if(A.size() > 0){
-        for(int i=0 ; i < ps.size() ; i++){
-            int prime = ps[i].first , power = ps[i].second;
-            vector<vector<int>> Nullspacei = Modp_nullspace_r(A , prime , power) , NullsiValid;
-            // Checking if eigenvectors are valid , as for non-primes, there could be cases of invalid eigenvectors produced
-            cout << "Nullspacei is: " << endl;
-            Print_matrix(Nullspacei);
-            cout << endl;
-            
-            if(power > 1){
-                for(auto& vec : Nullspacei){
-                    if(Check_null(A , vec , pow(prime , power))){
-                        NullsiValid.push_back(vec);
-                    }
-                }
-            }
-            //cout << "the individual nullspace for prime " << prime << " with power of " << power << endl;
-            //Print_matrix(Nullspacei);
-            NullsiValid = Modp_scalmult(n/pow(prime , power) , NullsiValid, n);
-            //cout << "After scaling: " << endl;
-            //Print_matrix(Nullspacei);
-            //cout << endl;
-            Null = Vert_conc(Null , NullsiValid);
-        }
-    }
-    return Null;
-}
-
 int GCD_vec(vector<int> vec) {
     int current_gcd = 0;  // Start with 0, which is neutral for GCD computation.
     for (int num : vec) {
@@ -548,6 +515,37 @@ void Simplify_nullspace(Matrix PermMat , Matrix& Nulls , int modn){
             }
         }
     }
+}
+
+// This function computes the mod n nullspace basis of A, where n is any integer!
+vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
+    vector<pair<int, int>> ps = Prime_decomp(n);
+    vector<vector<int>> Null;
+
+    if(A.size() > 0){
+        for(int i=0 ; i < ps.size() ; i++){
+            int prime = ps[i].first , power = ps[i].second;
+            vector<vector<int>> Nullspacei = Modp_nullspace_r(A , prime , power) , NullsiValid;
+            // Checking if eigenvectors are valid , as for non-primes, there could be cases of invalid eigenvectors produced
+            
+            if(power > 1){
+                for(auto& vec : Nullspacei){
+                    if(Check_null(A , vec , pow(prime , power))){
+                        NullsiValid.push_back(vec);
+                    }
+                }
+            }
+            //cout << "the individual nullspace for prime " << prime << " with power of " << power << endl;
+            //Print_matrix(Nullspacei);
+            NullsiValid = Modp_scalmult(n/pow(prime , power) , NullsiValid, n);
+            //cout << "After scaling: " << endl;
+            //Print_matrix(Nullspacei);
+            //cout << endl;
+            Null = Vert_conc(Null , NullsiValid);
+        }
+    }
+    Simplify_nullspace(A , Null , n);
+    return Null;
 }
 
 
