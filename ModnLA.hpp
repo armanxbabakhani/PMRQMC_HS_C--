@@ -66,7 +66,7 @@ vector<vector<int>> Modp_mult(const vector<vector<int>> A , const vector<vector<
     return AB;
 }
 
-// This function divides num by divider (mod p)
+// This function divides num by divider (mod p): this only works if p is prime, since multiplication cannot produce division when p is not a prime!
 int Modp_divide(int num , int divider , int p){
     int answer;
     for (int i = 0; i < p; i++){
@@ -341,48 +341,113 @@ vector<pair<int , int>> Prime_decomp(int n){
     return primes;
 }
 
-// Nullspace for finite fields (mod p, where p is a prime)!
-vector<vector<int>> Modp_Nullspace(vector<vector<int>> A , int p){
-    Modp_GE(A , p);
-    vector<vector<int>> nullspace;
+typedef vector<vector<int>> Matrix;
 
-    int colsA = A[0].size() , rowsA = A.size() , rank=0 , nullspaceDim;
+int modInverse(int a, int mod) {
+    // Assumes mod is a prime number
+    int m = mod - 2;  // Fermat's little theorem
+    int result = 1;
+    while (m) {
+        if (m & 1)
+            result = (result * a) % mod;
+        a = (a * a) % mod;
+        m >>= 1;
+    }
+    return result;
+}
 
-    vector<int> PivotCols , PivotRows;
-    //Determine pivot columns:
-    for(int i = 0; i < rowsA; i++){
-        for(int j = 0; j < colsA; j++){
-            if(A[i][j] == 1){
-                PivotCols.push_back(j);
-                PivotRows.push_back(i);
-                rank++;
+bool Not_null(const vector<int> v) {
+    return any_of(v.begin(), v.end(), [](int i) { return i != 0; });
+}
+
+bool Check_null(Matrix Perms , vector<int> null , int modn){
+    Matrix PermTrans = Transpose(Perms);
+    vector<int> eig = Modp_scalmult(null[0] , {PermTrans[0]} , modn)[0];
+    for(int i = 1; i < null.size() ; ++i){
+        eig = Vec_add({eig} , {Modp_scalmult(null[i] , {PermTrans[i]} , modn)} , modn)[0];
+    }
+    return !Not_null(eig);
+}
+
+Matrix Modp_nullspace(const Matrix& A, int p) {
+    int n = A.size();        // number of rows
+    int m = A[0].size();     // number of columns
+    Matrix B = A;            // Make a copy of A to transform into RREF
+    Matrix nullspace;
+    // Step 1: Transform B into RREF form mod p
+    int row = 0;
+    vector<int> lead_col(m, -1);  // Track leading columns
+
+    for (int col = 0; col < m && row < n; col++) {
+        int sel = row;
+        // Find a non-zero entry in the current column
+        for (int i = row; i < n; i++) {
+            if (B[i][col] % p != 0) {
+                sel = i;
                 break;
             }
         }
+
+        if (B[sel][col] % p == 0)
+            continue;  // Skip this column if no non-zero entries
+
+        // Swap rows if necessary
+        if (sel != row) {
+            swap(B[sel], B[row]);
+        }
+
+        // Scale row to make the leading coefficient 1
+        int inv = modInverse(B[row][col], p);
+        for (int j = 0; j < m; j++) {
+            B[row][j] = (B[row][j] * inv) % p;
+            if (B[row][j] < 0) B[row][j] += p;
+        }
+
+        // Zero out all other entries in this column
+        for (int i = 0; i < n; i++) {
+            if (i != row) {
+                int c = B[i][col];
+                for (int j = 0; j < m; j++) {
+                    B[i][j] = (B[i][j] - c * B[row][j] % p + p) % p;
+                }
+            }
+        }
+
+        lead_col[row] = col;  // Mark the leading column
+        row++;
     }
 
-    nullspaceDim = colsA - rank;
-
-    for(int i=0; i < colsA; i++){
-        if(!Num_found_inVec(i, PivotCols)){ 
-            vector<int> BasisVec(A[0].size() , 0);
-            BasisVec[i] = 1;
-            // Mark the rows that have a non-zero entry in this column:
-            for(int k = 0; k < rank; k++){
-                BasisVec[PivotCols[k]] = (p - A[PivotRows[k]][i])%p;
-            }
-            nullspace.push_back(BasisVec);
+    // Step 2: Identify free variables and form nullspace basis vectors
+    nullspace.clear();
+    vector<int> free_var_index;
+    for (int j = 0; j < m; j++) {
+        if (find(lead_col.begin(), lead_col.end(), j) == lead_col.end()) {
+            free_var_index.push_back(j);  // j is a free variable
         }
     }
-    return Transpose(nullspace);
+
+    for (int idx : free_var_index) {
+        vector<int> basis_vec(m, 0);
+        basis_vec[idx] = 1;  // Set the free variable
+        for (int i = 0; i < row; i++) {
+            if (lead_col[i] != -1) {
+                basis_vec[lead_col[i]] = -B[i][idx];
+                if (basis_vec[lead_col[i]] < 0)
+                    basis_vec[lead_col[i]] += p;
+            }
+        }
+        nullspace.push_back(basis_vec);
+    }
+    return nullspace;
 }
+
 
 // The following function solves the system of equations Ax = b (mod p)
 // Even though b is a vector<vector<int>>, it must be only a single column vector!
 vector<vector<int>> Modp_solver(vector<vector<int>> A , vector<vector<int>> b , int p){
     vector<vector<int>> Ab = Horz_conc(A , Modp_scalmult(-1 , b , p));
     Modp_GE(Ab , p);
-    vector<vector<int>> x = Modp_Nullspace(Ab , p) , x_final;
+    vector<vector<int>> x = Modp_nullspace(Ab , p) , x_final;
     int n = x[0].size() , m = x.size();
     for(int i = 0; i < m; i++){
         if(x[i][n-1] != 0){
@@ -396,27 +461,25 @@ vector<vector<int>> Modp_solver(vector<vector<int>> A , vector<vector<int>> b , 
 }
 
 // This function computes nullspace basis of A mod p^r! when r = 1, it simply makes a single call to Modp_Nullspace(A , p)
-vector<vector<int>> Modp_Nullspace_r(vector<vector<int>> A , int p , int r){
+vector<vector<int>> Modp_nullspace_r(vector<vector<int>> A , int p , int r){
     if(r == 1){
-        return Modp_Nullspace(A , p);
+        return Modp_nullspace(A , p);
     }
     else{
-        vector<vector<int>> x = Modp_Nullspace_r(A , p , r-1);
+        vector<vector<int>> x = Modp_nullspace_r(A , p , r-1);
         vector<vector<int>> b2 = Modp_scalmult(-1 , Modp_mult(A , x , pow(p , r)), pow(p , r));
-
         x = Modp_scalmult(p , x , pow(p,r));
         vector<vector<int>> b2trans = Transpose(b2);
-
         for(int i = 0; i < b2trans.size(); i++){
-            vector<vector<int>> xr = Transpose(Modp_solver(A , Transpose({b2trans[i]}) , r-1));
+            vector<vector<int>> xr = Transpose(Modp_solver(A , Transpose({b2trans[i]}) , pow( p , r-1)));
             if(!All_zeros(xr)){
-                x = Horz_conc(x , xr);
+                x = Vert_conc(x , xr);
             }
         }
-        return x;
+        vector<vector<int>> xpr = Modp_nullspace(A , pow(p , r));
+        return Vert_conc(xpr , x);
     }
 }
-
 
 // This function computes the mod n nullspace basis of A, where n is any integer!
 vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
@@ -426,13 +489,108 @@ vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
     if(A.size() > 0){
         for(int i=0 ; i < ps.size() ; i++){
             int prime = ps[i].first , power = ps[i].second;
-            vector<vector<int>> Nullspacei = Modp_Nullspace_r(A , prime , power);
-            Nullspacei = Modp_scalmult(n/pow(prime , power) , Nullspacei , n);
-            Null = Horz_conc(Null , Nullspacei);
+            vector<vector<int>> Nullspacei = Modp_nullspace_r(A , prime , power) , NullsiValid;
+            // Checking if eigenvectors are valid , as for non-primes, there could be cases of invalid eigenvectors produced
+            for(auto& vec : Nullspacei){
+                if(Check_null(A , vec , pow(prime , power))){
+                    NullsiValid.push_back(vec);
+                }
+            }
+            //cout << "the individual nullspace for prime " << prime << " with power of " << power << endl;
+            //Print_matrix(Nullspacei);
+            NullsiValid = Modp_scalmult(n/pow(prime , power) , NullsiValid, n);
+            //cout << "After scaling: " << endl;
+            //Print_matrix(Nullspacei);
+            //cout << endl;
+            Null = Vert_conc(Null , NullsiValid);
         }
     }
     return Null;
 }
+
+int GCD_vec(vector<int> vec) {
+    int current_gcd = 0;  // Start with 0, which is neutral for GCD computation.
+    for (int num : vec) {
+        if (num != 0) {  // Only consider non-zero elements
+            if (current_gcd == 0) {
+                current_gcd = num;  // Initialize current_gcd with the first non-zero element
+            } else {
+                current_gcd = gcd(current_gcd, num);
+            }
+        }
+    }
+    return abs(current_gcd);  // Return the absolute value of the GCD to ensure it's non-negative
+}
+
+vector<int> Divide_vec( vector<int> vec, int num){
+    vector<int> vec_div = vec;
+    for(int i =0 ; i < vec.size() ; ++i){
+        vec_div[i] = vec[i]/num;
+    }
+    return vec_div;
+}
+
+void Simplify_nullspace(Matrix PermMat , Matrix& Nulls , int modn){
+    // Assumption here is that the rows of the Nulls are eigenvectors of the nullspace of the column matrix PermMat
+    int Nrows = Nulls.size() , Ncols = Nulls[0].size();
+    for(int i=0; i < Nrows ; ++i){
+        int gcdi = GCD_vec(Nulls[i]);
+        if(gcdi > 1){
+            vector<int> nullsimp_i = Divide_vec(Nulls[i] , gcdi);
+            if(Check_null(PermMat , nullsimp_i , modn)){
+                Nulls[i] = nullsimp_i;
+            }
+        }
+    }
+}
+
+
+/*
+vector<int> Matvec_mult(const Matrix& mat, const vector<int>& vec, int mod) {
+    int n = mat.size();     // number of rows
+    int m = vec.size();     // should match the number of columns in mat
+    vector<int> result(n, 0);
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < m; ++j) {
+            result[i] = (result[i] + mat[i][j] * vec[j]) % mod;
+        }
+    }
+    return result;
+}
+
+void RefineBasis(const Matrix& A, Matrix& basis, int p, int pi, int pii) {
+    Matrix newBasis;
+    for (auto& vec : basis) {
+        std::vector<int> w = Matvec_mult(A, vec, pii);  // A * v mod p^(i+1)
+        for (int j = 0; j < w.size(); ++j) {
+            if (w[j] % pi != 0) { // Check if congruent to 0 mod p^i
+                for (int k = 0; k < vec.size(); ++k) {
+                    int adjustment = (pii + w[j]) / pi;  // Adjust to make it zero mod p^(i+1)
+                    vec[k] = (vec[k] - adjustment * vec[k]) % pii;
+                }
+            }
+        }
+        newBasis.push_back(vec);
+    }
+    basis = newBasis;
+}
+
+Matrix Modp_nullspace_r_new(const Matrix& A, int p, int r) {
+    Matrix result;
+    Matrix basis = Modp_nullspace_new(A, p);  // Start with the nullspace mod p
+
+    int pi = p;
+    for (int i = 1; i < r; ++i) {
+        int pii = pi * p;
+        RefineBasis(A, basis , p, pi, pii);
+        pi = pii;
+    }
+
+    result = basis;
+
+    return result;
+}
+*/
 
 /*int main(){
     // Testing Nullspace finder!

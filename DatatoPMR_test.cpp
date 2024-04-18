@@ -7,6 +7,7 @@
 #include <numeric>
 #include <cmath>
 #include <bitset>
+#include "ModnLA.hpp"
 
 using namespace std;
 
@@ -672,12 +673,13 @@ int main(int argc , char* argv[]){
     Coeffs Cs = CDPdata.Coefficients;
     TotalDVecs DMatrices = CDPdata.Diagonals;
     vector< vector<pair<int,int>>> PMatrices = CDPdata.Permutations;
-    int N = CDPdata.NumOfParticles;
+    int N = CDPdata.NumOfParticles , tS1 = CDPdata.twoSplusOne;
 
     cout << "The following is the breakdown of the data " << endl;
     cout << endl;
     cout << "done!" << endl;
     Print_data(CDPdata);
+    cout << endl;
     cout << endl;
 
     vector<vector<TotalDiag>> D0 = CDPdata.D0;
@@ -685,6 +687,26 @@ int main(int argc , char* argv[]){
     cout << "The number of unique permutations are: " << PMatrices.size() << endl;
     cout << "The size of D0 is " << D0.size() << endl;
     cout << "D0 coefficient: " << D0Coeffs[0] << endl;
+
+
+    
+    vector<vector<int>> PermCols = Convert_perms(PMatrices , N);
+    //vector<vector<int>> nullspace = Nullspace_n(PermCols , tS1);
+
+    
+    vector<vector<int>> MatrixTest = {{2, 1 , 0, 3, 0},{1,3,1,0,2},{0,1,0,0,0},{1,0,1,1,2}} , M2 = {{3,1,1,2},{1,1,2,3}};
+    int modn = 4;
+    vector<vector<int>> nullspace = Nullspace_n(M2 , modn);
+    cout << "The permutation matrix is: " << endl;
+    printMatrix(M2);
+
+    cout << "The size of the nullspace is: " << nullspace.size() << endl;
+    cout << "The nullspace is " << endl;
+    printMatrix(nullspace);
+
+    cout << "The simplified nullspace is " << endl;
+    Simplify_nullspace(MatrixTest , nullspace , modn);
+    printMatrix(nullspace);
     // Testing diag main:
     /*TotalDiag D1 , D2 , D3 , D4 , D1c;
     D1.ztype = 1;
