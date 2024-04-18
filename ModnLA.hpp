@@ -491,9 +491,15 @@ vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
             int prime = ps[i].first , power = ps[i].second;
             vector<vector<int>> Nullspacei = Modp_nullspace_r(A , prime , power) , NullsiValid;
             // Checking if eigenvectors are valid , as for non-primes, there could be cases of invalid eigenvectors produced
-            for(auto& vec : Nullspacei){
-                if(Check_null(A , vec , pow(prime , power))){
-                    NullsiValid.push_back(vec);
+            cout << "Nullspacei is: " << endl;
+            Print_matrix(Nullspacei);
+            cout << endl;
+            
+            if(power > 1){
+                for(auto& vec : Nullspacei){
+                    if(Check_null(A , vec , pow(prime , power))){
+                        NullsiValid.push_back(vec);
+                    }
                 }
             }
             //cout << "the individual nullspace for prime " << prime << " with power of " << power << endl;

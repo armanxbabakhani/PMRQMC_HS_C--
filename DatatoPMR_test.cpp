@@ -694,19 +694,34 @@ int main(int argc , char* argv[]){
     //vector<vector<int>> nullspace = Nullspace_n(PermCols , tS1);
 
     
-    vector<vector<int>> MatrixTest = {{2, 1 , 0, 3, 0},{1,3,1,0,2},{0,1,0,0,0},{1,0,1,1,2}} , M2 = {{3,1,1,2},{1,1,2,3}};
-    int modn = 4;
-    vector<vector<int>> nullspace = Nullspace_n(M2 , modn);
-    cout << "The permutation matrix is: " << endl;
-    printMatrix(M2);
+    vector<vector<int>> MatrixTest = {{2, 1 , 0, 3, 0},{1,3,1,0,2},{0,1,0,0,0},{1,0,1,1,2}} , M4 = {{3,1,1,2},{1,1,2,3}};
+    vector<vector<int>> M21 = {{1,0,0,0},{0,1,0,1},{1,1,1,0},{1,0,1,1}} , M31 = {{1,1,0,1 , 1},{2,1,1,0 , 1},{0,2,1,0,1},{1,0,1,2,0}};
+    int mod4 = 4 , mod2=2 , mod3 =3 ;
+    vector<vector<int>> n21 = Modp_nullspace(M21 , mod2);
+    cout << "The permutation matrix M21 is: " << endl;
+    printMatrix(M21);
 
-    cout << "The size of the nullspace is: " << nullspace.size() << endl;
+    if(n21.size() > 0){
+        cout << "The nullspace is " << endl;
+        printMatrix(n21);
+        cout << "The simplified nullspace is " << endl;
+        Simplify_nullspace(M21 , n21 , mod2);
+        printMatrix(n21);
+    }
+    else{
+        cout << "Nullspace of n21 is empty! " << endl;
+    }
+
+    vector<vector<int>> n31 = Modp_nullspace(M31 , mod3);
+    cout << "The permutation matrix M31 is: " << endl;
+    printMatrix(M31);
+
     cout << "The nullspace is " << endl;
-    printMatrix(nullspace);
+    printMatrix(n31);
 
     cout << "The simplified nullspace is " << endl;
-    Simplify_nullspace(MatrixTest , nullspace , modn);
-    printMatrix(nullspace);
+    Simplify_nullspace(M31 , n31 , mod3);
+    printMatrix(n31);
     // Testing diag main:
     /*TotalDiag D1 , D2 , D3 , D4 , D1c;
     D1.ztype = 1;
