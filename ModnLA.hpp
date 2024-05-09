@@ -534,6 +534,9 @@ vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
                     }
                 }
             }
+            else{
+                NullsiValid = Nullspacei;
+            }
             NullsiValid = Modp_scalmult(n/pow(prime , power) , NullsiValid, n);
             Null = Vert_conc(Null , NullsiValid);
         }

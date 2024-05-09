@@ -686,7 +686,7 @@ int main(int argc , char* argv[]){
     vector<complex<double>> D0Coeffs = CDPdata.D0Coeffs;
     cout << "The number of unique permutations are: " << PMatrices.size() << endl;
     cout << "The size of D0 is " << D0.size() << endl;
-    cout << "D0 coefficient: " << D0Coeffs[0] << endl;
+    //cout << "D0 coefficient: " << D0Coeffs[0] << endl;
 
 
     
@@ -699,7 +699,10 @@ int main(int argc , char* argv[]){
     vector<vector<int>> A2 = {{2, 1 , 0, 3, 0},{1,3,1,0,2},{0,1,0,0,0},{1,0,1,1,2}};
     int mod4 = 4 , mod2=2 , mod3 =3 ;
     vector<vector<int>> n21 = Nullspace_n(A2 , mod4);
-    cout << "The permutation matrix M21 is: " << endl;
+    cout << "The nullspace is: " << endl;
+    printMatrix(Nullspace_n(PermCols , 2));
+
+    /*cout << "The permutation matrix M21 is: " << endl;
     printMatrix(A2);
 
     if(n21.size() > 0){
@@ -722,7 +725,9 @@ int main(int argc , char* argv[]){
 
     cout << "The simplified nullspace is " << endl;
     Simplify_nullspace(M32 , n32 , mod3);
-    printMatrix(n32);
+    printMatrix(n32);*/
+
+
     // Testing diag main:
     /*TotalDiag D1 , D2 , D3 , D4 , D1c;
     D1.ztype = 1;
