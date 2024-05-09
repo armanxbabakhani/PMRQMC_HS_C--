@@ -697,10 +697,16 @@ int main(int argc , char* argv[]){
     vector<vector<int>> MatrixTest = {{2, 1 , 0, 3, 0},{1,3,1,0,2},{0,1,0,0,0},{1,0,1,1,2}} , M4 = {{3,1,1,2},{1,1,2,3}};
     vector<vector<int>> M21 = {{1,0,0,0},{0,1,0,1},{1,1,1,0},{1,0,1,1}} , M31 = {{1,1,0,1 , 1},{2,1,1,0 , 1},{0,2,1,0,1},{1,0,1,2,0}} , M32 = {{1,2,0,0 ,2},{1,2,2,0 , 0},{1,2,0,1,0}};
     vector<vector<int>> A2 = {{2, 1 , 0, 3, 0},{1,3,1,0,2},{0,1,0,0,0},{1,0,1,1,2}};
+    vector<vector<int>> A1 = {{1, 1 , 0, 0, 0},{1,0,1,0,1},{0,1,1,1,0},{1,0,1,0,1}};
     int mod4 = 4 , mod2=2 , mod3 =3 ;
-    vector<vector<int>> n21 = Nullspace_n(A2 , mod4);
-    cout << "The nullspace is: " << endl;
-    printMatrix(Nullspace_n(PermCols , 2));
+    vector<vector<int>> n22 = Nullspace_n(A2 , mod4);
+    vector<vector<int>> n21 = Nullspace_n(A1 , mod2);
+    cout << endl;
+    cout << "The mod 2 nullspace is: " << endl;
+    printMatrix( Nullspace_n(A1 , mod2));
+    cout << endl;
+    //cout << "The nullspace is: " << endl;
+    //printMatrix(Nullspace_n(PermCols , 2));
 
     /*cout << "The permutation matrix M21 is: " << endl;
     printMatrix(A2);
