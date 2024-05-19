@@ -21,6 +21,22 @@ void Print_matrix(const vector<vector<T>>& matrix) {
     }
 }
 
+vector<vector<int>> Modp_matrixadd(vector<vector<int>> A , vector<vector<int>> B , int p){
+    int lA1 = A.size() , lB1 = B.size() , lA2 = A[0].size() , lB2 = B[0].size();
+    if(lA1 != lB1 || lA2 != lB2){
+        cout << "Matrix addition cannot be performed correctly, as the matrices provided do not have identical dimensions." << endl;
+        return {{}};
+    }
+
+    vector<vector<int>> ApB = A;
+    for(int i = 0; i < lA1; ++i){
+        for(int j = 0; j < lA2; ++j){
+            ApB[i][j] = (ApB[i][j] + B[i][j])%p;
+        }
+    }
+    return ApB;
+}
+
 // This function mod p multiplies the matrix A by a scalar c!
 vector<vector<int>> Modp_scalmult(const int c , const vector<vector<int>> A , int p){
     int rowsA = A.size();
@@ -469,15 +485,39 @@ vector<vector<int>> Modp_nullspace_r(vector<vector<int>> A , int p , int r){
         vector<vector<int>> x = Modp_nullspace_r(A , p , r-1);
         vector<vector<int>> b2 = Modp_scalmult(-1 , Modp_mult(A , x , pow(p , r)), pow(p , r));
         x = Modp_scalmult(p , x , pow(p,r));
+        cout << endl;
+        cout << "before doing the additional steps: " << endl;
+        cout << "x is: " << endl;
+        Print_matrix(x);
         vector<vector<int>> b2trans = Transpose(b2);
+        cout << "b2trans is " << endl;
+        Print_matrix(b2trans);
+        cout << endl;
+        vector<vector<int>> xrs;
         for(int i = 0; i < b2trans.size(); i++){
+            //vector<vector<int>> xr = Modp_solver(A , Transpose({b2trans[i]}) , pow( p , r-1));
+            cout << "b2trans is: " << endl;
+            Print_matrix(Transpose({b2trans[i]}));
             vector<vector<int>> xr = Modp_solver(A , Transpose({b2trans[i]}) , pow( p , r-1));
-            if(!All_zeros(xr)){
+            cout << "Inside the loop: " << endl;
+            cout << "xrs is: " << endl;
+            Print_matrix(xr);
+            cout << endl;
+            xrs = Horz_conc(xrs , xr);
+            /*if(!All_zeros(xr)){
                 x = Horz_conc(x , xr);
-            }
+            }*/
         }
+        cout << "After doing the additional steps: " << endl;
+        cout << "xrs is: " << endl;
+        Print_matrix(xrs);
+        cout << "x is: " << endl;
+        Print_matrix(x);
+        cout << endl;
+        x = Modp_matrixadd(x , xrs , pow(p , r));
         vector<vector<int>> xpr = Modp_nullspace(A , pow(p , r));
         return Transpose(Horz_conc(xpr , x));
+        //return x;
     }
 }
 
@@ -541,8 +581,8 @@ vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
             Null = Vert_conc(Null , NullsiValid);
         }
     }
-    Null = Transpose(Null);
     Simplify_nullspace(A , Null , n);
+    Null = Transpose(Null);
     // Returning the nullspace
     return Null;
 }
