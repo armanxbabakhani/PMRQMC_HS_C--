@@ -58,6 +58,28 @@ vector<vector<int>> Modp_scalmult(const int c , const vector<vector<int>> A , in
     return cA;
 }
 
+// This function mod p multiplies the matrix A by a scalar c!
+vector<vector<int>> Modp_scalmult_double(const double c , const vector<vector<int>> A , int p){
+    int rowsA = A.size();
+    if(rowsA == 0){
+        return A;
+    }
+    int colsA = A[0].size();
+    vector<vector<int>> cA(rowsA , vector<int> (colsA , 0));
+    for(int i = 0; i < rowsA ; i++){
+        for(int j = 0; j < colsA ; j++){
+            int num = c*A[i][j];
+            if(c >= 0){
+                cA[i][j] = num % p;
+            }
+            else{
+                cA[i][j] = (p + (num % p)) % p;
+            }
+        }
+    }
+    return cA;
+}
+
 // This function computes matrix multiplication of A and b mod p.
 vector<vector<int>> Modp_mult(const vector<vector<int>> A , const vector<vector<int>> B , int p){
     int rowsA = A.size(), colsA = A[0].size() , rowsB = B.size(), colsB = B[0].size();
@@ -464,16 +486,17 @@ vector<vector<int>> Modp_solver(vector<vector<int>> A , vector<vector<int>> b , 
     vector<vector<int>> Ab = Horz_conc(A , Modp_scalmult(-1 , b , p));
     Modp_GE(Ab , p);
     vector<vector<int>> x = Modp_nullspace(Ab , p) , x_final;
-    int n = x[0].size() , m = x.size();
-    for(int i = 0; i < m; i++){
-        if(x[i][n-1] != 0){
-            int mult = Modp_divide(x[i][n-1] , 1 , p);
-            vector<int> x_i = Modp_scalmult(mult , {x[i]} , p)[0];
+    vector<vector<int>> xt = Transpose(x);
+    int n = xt[0].size() , m = xt.size();
+    for(int i = 0; i < m; i++){ 
+        if(xt[i][n-1] != 0){
+            int mult = Modp_divide(xt[i][n-1] , 1 , p);
+            vector<int> x_i = Modp_scalmult(mult , {xt[i]} , p)[0];
             x_i.erase(x_i.begin() + n - 1);
             x_final.push_back(x_i);
         }
     }
-    return x_final;
+    return Transpose(x_final);
 }
 
 // This function computes nullspace basis of A mod p^r! when r = 1, it simply makes a single call to Modp_Nullspace(A , p)
@@ -483,40 +506,38 @@ vector<vector<int>> Modp_nullspace_r(vector<vector<int>> A , int p , int r){
     }
     else{
         vector<vector<int>> x = Modp_nullspace_r(A , p , r-1);
-        vector<vector<int>> b2 = Modp_scalmult(-1 , Modp_mult(A , x , pow(p , r)), pow(p , r));
-        x = Modp_scalmult(p , x , pow(p,r));
+        double factor = -1.0/pow(p , r-1);
+        vector<vector<int>> b = Modp_scalmult_double( factor , Modp_mult(A , x , pow(p , r)), pow(p , r));
+        //x = Modp_scalmult(pow() , x , pow(p,r));
         cout << endl;
+        cout << "r is: " << r << endl;
         cout << "before doing the additional steps: " << endl;
         cout << "x is: " << endl;
         Print_matrix(x);
-        vector<vector<int>> b2trans = Transpose(b2);
-        cout << "b2trans is " << endl;
-        Print_matrix(b2trans);
+        vector<vector<int>> btrans = Transpose(b);
+        cout << "btrans is " << endl;
+        Print_matrix(btrans);
         cout << endl;
         vector<vector<int>> xrs;
-        for(int i = 0; i < b2trans.size(); i++){
+        for(int i = 0; i < btrans.size(); i++){
             //vector<vector<int>> xr = Modp_solver(A , Transpose({b2trans[i]}) , pow( p , r-1));
-            cout << "b2trans is: " << endl;
-            Print_matrix(Transpose({b2trans[i]}));
-            vector<vector<int>> xr = Modp_solver(A , Transpose({b2trans[i]}) , pow( p , r-1));
+            cout << "btrans is: " << endl;
+            Print_matrix(Transpose({btrans[i]}));
+            vector<vector<int>> xr = Modp_solver(A , Transpose({btrans[i]}) , p);
             cout << "Inside the loop: " << endl;
             cout << "xrs is: " << endl;
             Print_matrix(xr);
             cout << endl;
-            xrs = Horz_conc(xrs , xr);
-            /*if(!All_zeros(xr)){
-                x = Horz_conc(x , xr);
-            }*/
+            xrs = Horz_conc(xrs , xr); // Warning: This should be modified so that if xr is not an existing vector in xrs, then add it!
         }
         cout << "After doing the additional steps: " << endl;
         cout << "xrs is: " << endl;
         Print_matrix(xrs);
+        x = Modp_matrixadd(Modp_scalmult(pow(p , r-1) , xrs , pow(p , r)) ,  x  , pow(p , r));
         cout << "x is: " << endl;
         Print_matrix(x);
         cout << endl;
-        x = Modp_matrixadd(x , xrs , pow(p , r));
-        vector<vector<int>> xpr = Modp_nullspace(A , pow(p , r));
-        return Transpose(Horz_conc(xpr , x));
+        return x;
         //return x;
     }
 }
@@ -565,7 +586,7 @@ vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
     if(A.size() > 0){
         for(int i=0 ; i < ps.size() ; i++){
             int prime = ps[i].first , power = ps[i].second;
-            vector<vector<int>> Nullspacei = Modp_nullspace_r(A , prime , power) , NullsiValid;
+            vector<vector<int>> Nullspacei = Transpose(Modp_nullspace_r(A , prime , power)) , NullsiValid;
             // Checking if eigenvectors are valid , as for non-primes, there could be cases of invalid eigenvectors produced
             if(power > 1){
                 for(auto& vec : Nullspacei){
@@ -583,7 +604,6 @@ vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
     }
     Simplify_nullspace(A , Null , n);
     Null = Transpose(Null);
-    // Returning the nullspace
     return Null;
 }
 
