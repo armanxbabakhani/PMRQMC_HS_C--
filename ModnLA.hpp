@@ -542,9 +542,14 @@ Matrix Modp_nullspace_r(Matrix A , int p , int r){
         return Modp_nullspace(A , p);
     }
     else{
+        
         Matrix x = Modp_nullspace_r(A , p , r-1) , xt , b;
         xt = Transpose(x);
         double factor = -1.0/pow(p , r-1);
+        cout << endl;
+        cout << "At the start: for r is " << r << " x is " << endl;
+        Print_matrix(x);
+        cout << endl;
         if(xt.size() == 0){
             // This means that no nullspace was found, and one must divide by p!
             cout << "Size of the nullspace is zero!" << endl;
@@ -584,6 +589,43 @@ Matrix Modp_nullspace_r(Matrix A , int p , int r){
     }
 }
 
+// This function determines if the input vector is divisible by m (i.e. all entries are multiples of m)
+bool Vec_divisible(Matrix vec , int m){
+    for(int i=0; i < vec.size();++i){
+        if(vec[i]%m != 0){
+            return false; 
+        }
+    }
+    return true;
+}
+
+pair<Matrix , vector<int>> Find_divisibles(const Matrix A , int m){
+    // Assuming we are given column vectors (A), in order to find if column is a multiple of p^k,
+    //     we will transform into rows and determine if rows are multiples of p^k
+
+    // This function returns the column matrix of all divisible columns and a vector<int> of their indices
+    //      corresponding to the original columns of A
+    vector<int> Indices;
+    Matrix At = Transpose(A) , Divisibles;
+    for(int i=0; i < At.size();++i){
+        if(Vec_divisible(At[i] , m)){
+            Divisibles.push_back(At[i]);
+            Indices.push_back(i);
+        }
+    }
+
+    return {Transpose(Divisibles) , Indices};
+}
+
+Matrix Modp_rnull_full(const Matrix A , int p , int r){
+    Matrix FullNulls;
+    for(int i=1; i < r+1; i++){
+
+    }
+
+
+}
+
 int GCD_vec(vector<int> vec) {
     int current_gcd = 0;  // Start with 0, which is neutral for GCD computation.
     for (int num : vec) {
@@ -608,7 +650,7 @@ vector<int> Divide_vec( vector<int> vec, int num){
 
 void Simplify_nullspace(Matrix PermMat , Matrix& Nulls , int modn){
     // Assumption here is that the rows of the Nulls are eigenvectors of the nullspace of the column matrix PermMat
-    int Nrows = Nulls.size() , Ncols = Nulls[0].size();
+    int Nrows = Nulls.size();
     for(int i=0; i < Nrows ; ++i){
         int gcdi = GCD_vec(Nulls[i]);
         if(gcdi > 1){
@@ -621,14 +663,14 @@ void Simplify_nullspace(Matrix PermMat , Matrix& Nulls , int modn){
 }
 
 // This function computes the mod n nullspace basis of A, where n is any integer!
-vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
+Matrix Nullspace_n(const Matrix A , int n){
     vector<pair<int, int>> ps = Prime_decomp(n);
-    vector<vector<int>> Null;
+    Matrix Null;
 
     if(A.size() > 0){
         for(int i=0 ; i < ps.size() ; i++){
             int prime = ps[i].first , power = ps[i].second;
-            vector<vector<int>> Nullspacei = Transpose(Modp_nullspace_r(A , prime , power)) , NullsiValid;
+            Matrix Nullspacei = Transpose(Modp_nullspace_r(A , prime , power)) , NullsiValid;
             // Checking if eigenvectors are valid , as for non-primes, there could be cases of invalid eigenvectors produced
             if(power > 1){
                 for(auto& vec : Nullspacei){
@@ -645,9 +687,11 @@ vector<vector<int>> Nullspace_n(const vector<vector<int>> A , int n){
         }
     }
     Simplify_nullspace(A , Null , n);
+    cout << "Simplification done! " << endl;
     Null = Transpose(Null);
     return Null;
 }
+
 
 
 /*
