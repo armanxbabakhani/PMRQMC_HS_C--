@@ -412,10 +412,19 @@ Matrix Modp_nullspace(const Matrix& A, int p) {
     int m = A[0].size();     // number of columns
     Matrix B = A;            // Make a copy of A to transform into RREF
     Matrix nullspace;
+    
+    for(int i = 0; i < n ; ++i){
+        for(int j = 0; j < m; ++j){
+            B[i][j] = B[i][j]%p;
+        }
+    }
+
+    if(All_zeros(B)){
+        return {{}};
+    }
     // Step 1: Transform B into RREF form mod p
     int row = 0;
     vector<int> lead_col(m, -1);  // Track leading columns
-
     for (int col = 0; col < m && row < n; col++) {
         int sel = row;
         // Find a non-zero entry in the current column
@@ -454,7 +463,6 @@ Matrix Modp_nullspace(const Matrix& A, int p) {
         lead_col[row] = col;  // Mark the leading column
         row++;
     }
-
     // Step 2: Identify free variables and form nullspace basis vectors
     nullspace.clear();
     vector<int> free_var_index;
@@ -476,69 +484,103 @@ Matrix Modp_nullspace(const Matrix& A, int p) {
         }
         nullspace.push_back(basis_vec);
     }
+
     return Transpose(nullspace);
 }
 
 
 // The following function solves the system of equations Ax = b (mod p)
 // Even though b is a vector<vector<int>>, it must be only a single column vector!
-vector<vector<int>> Modp_solver(vector<vector<int>> A , vector<vector<int>> b , int p){
+Matrix Modp_solver(Matrix A , Matrix b , int p){
     vector<vector<int>> Ab = Horz_conc(A , Modp_scalmult(-1 , b , p));
+    
+
+    cout << "Inside of Modp_solver: ... " << endl;
+    cout << endl;
+    cout << "Before the Gaussian eliminated form of Ab: " << endl;
+    Print_matrix(Ab);
+    cout << endl;
+    
     Modp_GE(Ab , p);
-    vector<vector<int>> x = Modp_nullspace(Ab , p) , x_final;
-    vector<vector<int>> xt = Transpose(x);
+
+    cout << endl;
+    cout << "The Gaussian eliminated form of Ab: " << endl;
+    Print_matrix(Ab);
+    cout << endl;
+
+    Matrix x = Modp_nullspace(Ab , p) , x_final;
+
+    cout << endl;
+    cout << "The mod p nullspace of Ab is: " << endl;
+    Print_matrix(x);
+    cout << endl;
+
+    Matrix xt = Transpose(x);
     int n = xt[0].size() , m = xt.size();
     for(int i = 0; i < m; i++){ 
         if(xt[i][n-1] != 0){
             int mult = Modp_divide(xt[i][n-1] , 1 , p);
             vector<int> x_i = Modp_scalmult(mult , {xt[i]} , p)[0];
+            
+            cout << endl;
+            cout << "The nullspace eigenvector found is: " << endl;
+            Print_matrix(Matrix {xt[i]});
+            cout << endl;
+
             x_i.erase(x_i.begin() + n - 1);
             x_final.push_back(x_i);
         }
     }
+
+    cout << "End of Modp_solver: ... " << endl;
     return Transpose(x_final);
 }
 
 // This function computes nullspace basis of A mod p^r! when r = 1, it simply makes a single call to Modp_Nullspace(A , p)
-vector<vector<int>> Modp_nullspace_r(vector<vector<int>> A , int p , int r){
+Matrix Modp_nullspace_r(Matrix A , int p , int r){
     if(r == 1){
         return Modp_nullspace(A , p);
     }
     else{
-        vector<vector<int>> x = Modp_nullspace_r(A , p , r-1);
+        Matrix x = Modp_nullspace_r(A , p , r-1) , xt , b;
+        xt = Transpose(x);
         double factor = -1.0/pow(p , r-1);
-        vector<vector<int>> b = Modp_scalmult_double( factor , Modp_mult(A , x , pow(p , r)), pow(p , r));
-        //x = Modp_scalmult(pow() , x , pow(p,r));
-        cout << endl;
-        cout << "r is: " << r << endl;
-        cout << "before doing the additional steps: " << endl;
-        cout << "x is: " << endl;
-        Print_matrix(x);
-        vector<vector<int>> btrans = Transpose(b);
-        cout << "btrans is " << endl;
-        Print_matrix(btrans);
-        cout << endl;
-        vector<vector<int>> xrs;
-        for(int i = 0; i < btrans.size(); i++){
-            //vector<vector<int>> xr = Modp_solver(A , Transpose({b2trans[i]}) , pow( p , r-1));
-            cout << "btrans is: " << endl;
-            Print_matrix(Transpose({btrans[i]}));
-            vector<vector<int>> xr = Modp_solver(A , Transpose({btrans[i]}) , p);
-            cout << "Inside the loop: " << endl;
-            cout << "xrs is: " << endl;
-            Print_matrix(xr);
+        if(xt.size() == 0){
+            // This means that no nullspace was found, and one must divide by p!
+            cout << "Size of the nullspace is zero!" << endl;
+            cout << "r = " << r << endl;
             cout << endl;
-            xrs = Horz_conc(xrs , xr); // Warning: This should be modified so that if xr is not an existing vector in xrs, then add it!
+            x = Modp_nullspace_r(Modp_scalmult_double( 1.0/p , A , pow(p,r)) , p , r-1);
+            xt = Transpose(x);
+            factor = factor*p;
         }
-        cout << "After doing the additional steps: " << endl;
-        cout << "xrs is: " << endl;
-        Print_matrix(xrs);
-        x = Modp_matrixadd(Modp_scalmult(pow(p , r-1) , xrs , pow(p , r)) ,  x  , pow(p , r));
         cout << "x is: " << endl;
         Print_matrix(x);
         cout << endl;
+        b = Modp_scalmult_double( factor , Modp_mult(A , x , pow(p , r)), pow(p , r));
+        cout << "b is : " << endl;
+        Print_matrix(b);
+        cout << endl;
+        Matrix btrans = Transpose(b) , xrs;
+        if(!All_zeros(btrans)){
+            for(int i = 0; i < btrans.size(); i++){
+                Matrix xr = Modp_solver(A , Transpose({btrans[i]}) , p);
+                cout << "xr is: " << endl;
+                Print_matrix(xr);
+                cout << endl;
+                if (Transpose(xr).size() == 1){
+                    // add p*xr with xi
+                    xt[i] = Vec_add({xt[i]} , Modp_scalmult(pow(p , r-1) , Transpose(xr) , pow(p , r)) , pow(p,r))[0];
+                }
+            }
+        }
+        cout << endl;
+        cout << "The x tranpose is: " << endl;
+        Print_matrix(xt);
+        cout << endl;
+
+        x = Transpose(xt);
         return x;
-        //return x;
     }
 }
 
