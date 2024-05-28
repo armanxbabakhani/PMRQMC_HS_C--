@@ -590,7 +590,7 @@ Matrix Modp_nullspace_r(Matrix A , int p , int r){
 }
 
 // This function determines if the input vector is divisible by m (i.e. all entries are multiples of m)
-bool Vec_divisible(Matrix vec , int m){
+bool Vec_divisible(vector<int> vec , int m){
     for(int i=0; i < vec.size();++i){
         if(vec[i]%m != 0){
             return false; 
@@ -605,6 +605,9 @@ pair<Matrix , vector<int>> Find_divisibles(const Matrix A , int m){
 
     // This function returns the column matrix of all divisible columns and a vector<int> of their indices
     //      corresponding to the original columns of A
+
+    // This function would return a non-empty matrix only if there are subsets of A that have lower dimensions than A,
+    //    i.e. the function would return empty even if the entire A is itself a multiple!
     vector<int> Indices;
     Matrix At = Transpose(A) , Divisibles;
     for(int i=0; i < At.size();++i){
@@ -614,16 +617,39 @@ pair<Matrix , vector<int>> Find_divisibles(const Matrix A , int m){
         }
     }
 
+    if(Divisibles.size() == At.size()){
+        return { Matrix {{}} , vector<int> {} };
+    }
+
     return {Transpose(Divisibles) , Indices};
 }
 
 Matrix Modp_rnull_full(const Matrix A , int p , int r){
-    Matrix FullNulls;
-    for(int i=1; i < r+1; i++){
-
+    Matrix FullNulls = Modp_nullspace_r(A , p , r);
+    for(int i=1; i < r; i++){
+        int n = pow(p , i);
+        pair<Matrix , vector<int>> ApandInd = Find_divisibles(A , n);
+        Matrix Ap = ApandInd.first , ApNull;
+        vector<int> Indices = ApandInd.second;
+        if(Ap.size() > 0){
+            ApNull = Modp_nullspace_r( Modp_scalmult_double(1.0/n , Ap , pow(p,r)) , p , r );
+        }
+        // Building the actual nullspace eigenvector using the conversion indices of A and Ap
+        Matrix ApNullt = Transpose(ApNull) , FullNullp;
+        for(int j=0; j < ApNullt.size(); ++j){
+            vector<int> eigvec(A[0].size() , 0);
+            for(int k = 0; k < ApNullt[j].size(); ++k){
+                int num = ApNullt[j][k];
+                if(num != 0){
+                    eigvec[Indices[k]] = num;
+                }
+            }
+            FullNullp.push_back(eigvec);
+        }
+        FullNulls = Horz_conc(FullNulls, Transpose(FullNullp)); 
     }
 
-
+    return FullNulls;
 }
 
 int GCD_vec(vector<int> vec) {
@@ -670,7 +696,7 @@ Matrix Nullspace_n(const Matrix A , int n){
     if(A.size() > 0){
         for(int i=0 ; i < ps.size() ; i++){
             int prime = ps[i].first , power = ps[i].second;
-            Matrix Nullspacei = Transpose(Modp_nullspace_r(A , prime , power)) , NullsiValid;
+            Matrix Nullspacei = Transpose(Modp_rnull_full(A , prime , power)) , NullsiValid;
             // Checking if eigenvectors are valid , as for non-primes, there could be cases of invalid eigenvectors produced
             if(power > 1){
                 for(auto& vec : Nullspacei){
