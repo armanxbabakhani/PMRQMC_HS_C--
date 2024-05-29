@@ -419,9 +419,12 @@ Matrix Modp_nullspace(const Matrix& A, int p) {
         }
     }
 
+    
     if(All_zeros(B)){
-        return {{}};
+        return {{0}};
     }
+
+
     // Step 1: Transform B into RREF form mod p
     int row = 0;
     vector<int> lead_col(m, -1);  // Track leading columns
@@ -494,7 +497,6 @@ Matrix Modp_nullspace(const Matrix& A, int p) {
 Matrix Modp_solver(Matrix A , Matrix b , int p){
     vector<vector<int>> Ab = Horz_conc(A , Modp_scalmult(-1 , b , p));
     
-
     cout << "Inside of Modp_solver: ... " << endl;
     cout << endl;
     cout << "Before the Gaussian eliminated form of Ab: " << endl;
@@ -542,22 +544,36 @@ Matrix Modp_nullspace_r(Matrix A , int p , int r){
         return Modp_nullspace(A , p);
     }
     else{
-        
         Matrix x = Modp_nullspace_r(A , p , r-1) , xt , b;
         xt = Transpose(x);
-        double factor = -1.0/pow(p , r-1);
+        double factor = -1.0/pow(p , r-2);
         cout << endl;
         cout << "At the start: for r is " << r << " x is " << endl;
         Print_matrix(x);
         cout << endl;
-        if(xt.size() == 0){
+
+        // In case all vectors are in nullspace when computing in lower mod
+        bool IdentityNull = false;
+        if(x.size() > 0){
+            if(x.size() == 1 & x[0].size() == 1){
+                IdentityNull = true;
+            }
+        }
+        if(IdentityNull){
             // This means that no nullspace was found, and one must divide by p!
+            int m = A[0].size();
+            Matrix nulliden(m , vector<int> (m , 0));
+            cout << "m is: " << m << endl;
+            for(int i = 0; i < m; ++i){
+                nulliden[i][i] = pow(p , r-1);
+            }
             cout << "Size of the nullspace is zero!" << endl;
             cout << "r = " << r << endl;
             cout << endl;
-            x = Modp_nullspace_r(Modp_scalmult_double( 1.0/p , A , pow(p,r)) , p , r-1);
+            x = Horz_conc(nulliden , Modp_nullspace_r(Modp_scalmult_double( 1.0/p , A , pow(p,r)) , p , r-1));
             xt = Transpose(x);
             factor = factor*p;
+            r++;
         }
         cout << "x is: " << endl;
         Print_matrix(x);
@@ -579,10 +595,13 @@ Matrix Modp_nullspace_r(Matrix A , int p , int r){
                 }
             }
         }
-        cout << endl;
-        cout << "The x tranpose is: " << endl;
-        Print_matrix(xt);
-        cout << endl;
+        
+        if(xt.size() > 0){
+            cout << endl;
+            cout << "The x tranpose is: " << endl; 
+            Print_matrix(xt);
+            cout << endl;
+        }
 
         x = Transpose(xt);
         return x;
@@ -599,7 +618,7 @@ bool Vec_divisible(vector<int> vec , int m){
     return true;
 }
 
-pair<Matrix , vector<int>> Find_divisibles(const Matrix A , int m){
+pair<Matrix , vector<int>> Find_divisibles(const Matrix A , int p , int r){
     // Assuming we are given column vectors (A), in order to find if column is a multiple of p^k,
     //     we will transform into rows and determine if rows are multiples of p^k
 
@@ -608,6 +627,7 @@ pair<Matrix , vector<int>> Find_divisibles(const Matrix A , int m){
 
     // This function would return a non-empty matrix only if there are subsets of A that have lower dimensions than A,
     //    i.e. the function would return empty even if the entire A is itself a multiple!
+    int m = pow(p , r);
     vector<int> Indices;
     Matrix At = Transpose(A) , Divisibles;
     for(int i=0; i < At.size();++i){
@@ -617,8 +637,8 @@ pair<Matrix , vector<int>> Find_divisibles(const Matrix A , int m){
         }
     }
 
-    if(Divisibles.size() == At.size()){
-        return { Matrix {{}} , vector<int> {} };
+    if(Divisibles.size() == At.size() & r < 2){
+        return { Matrix {} , vector<int> {} };
     }
 
     return {Transpose(Divisibles) , Indices};
@@ -628,10 +648,12 @@ Matrix Modp_rnull_full(const Matrix A , int p , int r){
     Matrix FullNulls = Modp_nullspace_r(A , p , r);
     for(int i=1; i < r; i++){
         int n = pow(p , i);
-        pair<Matrix , vector<int>> ApandInd = Find_divisibles(A , n);
+        pair<Matrix , vector<int>> ApandInd = Find_divisibles(A , p , i);
         Matrix Ap = ApandInd.first , ApNull;
         vector<int> Indices = ApandInd.second;
         if(Ap.size() > 0){
+            cout << "Inside Modp rnull: Ap is " << endl;
+            Print_matrix(Ap);
             ApNull = Modp_nullspace_r( Modp_scalmult_double(1.0/n , Ap , pow(p,r)) , p , r );
         }
         // Building the actual nullspace eigenvector using the conversion indices of A and Ap
@@ -648,9 +670,9 @@ Matrix Modp_rnull_full(const Matrix A , int p , int r){
         }
         FullNulls = Horz_conc(FullNulls, Transpose(FullNullp)); 
     }
-
     return FullNulls;
 }
+
 
 int GCD_vec(vector<int> vec) {
     int current_gcd = 0;  // Start with 0, which is neutral for GCD computation.
@@ -696,7 +718,13 @@ Matrix Nullspace_n(const Matrix A , int n){
     if(A.size() > 0){
         for(int i=0 ; i < ps.size() ; i++){
             int prime = ps[i].first , power = ps[i].second;
+            //Matrix Nullspacei = Transpose(Modp_rnull_full(A , prime , power)) , NullsiValid;
             Matrix Nullspacei = Transpose(Modp_rnull_full(A , prime , power)) , NullsiValid;
+            cout << "The nullspace in nullspacen is: " << endl;
+            Print_matrix(Nullspacei);
+            cout << endl;
+
+
             // Checking if eigenvectors are valid , as for non-primes, there could be cases of invalid eigenvectors produced
             if(power > 1){
                 for(auto& vec : Nullspacei){
@@ -712,6 +740,7 @@ Matrix Nullspace_n(const Matrix A , int n){
             Null = Vert_conc(Null , NullsiValid);
         }
     }
+
     Simplify_nullspace(A , Null , n);
     cout << "Simplification done! " << endl;
     Null = Transpose(Null);
