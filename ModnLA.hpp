@@ -65,6 +65,9 @@ vector<vector<int>> Modp_scalmult_double(const double c , const vector<vector<in
         return A;
     }
     int colsA = A[0].size();
+    if(colsA == 0){
+        return A;
+    }
     vector<vector<int>> cA(rowsA , vector<int> (colsA , 0));
     for(int i = 0; i < rowsA ; i++){
         for(int j = 0; j < colsA ; j++){
@@ -82,12 +85,24 @@ vector<vector<int>> Modp_scalmult_double(const double c , const vector<vector<in
 
 // This function computes matrix multiplication of A and b mod p.
 vector<vector<int>> Modp_mult(const vector<vector<int>> A , const vector<vector<int>> B , int p){
-    int rowsA = A.size(), colsA = A[0].size() , rowsB = B.size(), colsB = B[0].size();
+    int rowsA = A.size(), colsA = A[0].size() , rowsB = B.size() , colsB;
 
     if (colsA != rowsB) {
-        cerr << "Matrices are not compatible for multiplication." << std::endl;
-        return {};
+        if(rowsB == 0){
+            return {};
+        }
+        else{
+            colsB = B[0].size();
+            if(colsB == 0){
+                return {{}};
+            }
+            else{
+                cerr << "Matrices are not compatible for multiplication." << std::endl;
+                return {};
+            }
+        }
     }
+    colsB = B[0].size();
 
     vector<vector<int>> AB(rowsA, vector<int>(colsB, 0));
     
@@ -495,46 +510,23 @@ Matrix Modp_nullspace(const Matrix& A, int p) {
 // The following function solves the system of equations Ax = b (mod p)
 // Even though b is a vector<vector<int>>, it must be only a single column vector!
 Matrix Modp_solver(Matrix A , Matrix b , int p){
+    
     vector<vector<int>> Ab = Horz_conc(A , Modp_scalmult(-1 , b , p));
-    
-    cout << "Inside of Modp_solver: ... " << endl;
-    cout << endl;
-    cout << "Before the Gaussian eliminated form of Ab: " << endl;
-    Print_matrix(Ab);
-    cout << endl;
-    
     Modp_GE(Ab , p);
 
-    cout << endl;
-    cout << "The Gaussian eliminated form of Ab: " << endl;
-    Print_matrix(Ab);
-    cout << endl;
-
     Matrix x = Modp_nullspace(Ab , p) , x_final;
-
-    cout << endl;
-    cout << "The mod p nullspace of Ab is: " << endl;
-    Print_matrix(x);
-    cout << endl;
-
     Matrix xt = Transpose(x);
+
     int n = xt[0].size() , m = xt.size();
     for(int i = 0; i < m; i++){ 
         if(xt[i][n-1] != 0){
             int mult = Modp_divide(xt[i][n-1] , 1 , p);
             vector<int> x_i = Modp_scalmult(mult , {xt[i]} , p)[0];
-            
-            cout << endl;
-            cout << "The nullspace eigenvector found is: " << endl;
-            Print_matrix(Matrix {xt[i]});
-            cout << endl;
 
             x_i.erase(x_i.begin() + n - 1);
             x_final.push_back(x_i);
         }
     }
-
-    cout << "End of Modp_solver: ... " << endl;
     return Transpose(x_final);
 }
 
@@ -546,12 +538,7 @@ Matrix Modp_nullspace_r(Matrix A , int p , int r){
     else{
         Matrix x = Modp_nullspace_r(A , p , r-1) , xt , b;
         xt = Transpose(x);
-        double factor = -1.0/pow(p , r-2);
-        cout << endl;
-        cout << "At the start: for r is " << r << " x is " << endl;
-        Print_matrix(x);
-        cout << endl;
-
+        double factor = -1.0/pow(p , r-1);
         // In case all vectors are in nullspace when computing in lower mod
         bool IdentityNull = false;
         if(x.size() > 0){
@@ -559,51 +546,35 @@ Matrix Modp_nullspace_r(Matrix A , int p , int r){
                 IdentityNull = true;
             }
         }
+
         if(IdentityNull){
             // This means that no nullspace was found, and one must divide by p!
             int m = A[0].size();
             Matrix nulliden(m , vector<int> (m , 0));
-            cout << "m is: " << m << endl;
             for(int i = 0; i < m; ++i){
                 nulliden[i][i] = pow(p , r-1);
             }
-            cout << "Size of the nullspace is zero!" << endl;
-            cout << "r = " << r << endl;
-            cout << endl;
             x = Horz_conc(nulliden , Modp_nullspace_r(Modp_scalmult_double( 1.0/p , A , pow(p,r)) , p , r-1));
-            xt = Transpose(x);
-            factor = factor*p;
-            r++;
+            //xt = Transpose(x);
+            //factor = factor*p;
+            //r++;
+            return x;
         }
-        cout << "x is: " << endl;
-        Print_matrix(x);
-        cout << endl;
-        b = Modp_scalmult_double( factor , Modp_mult(A , x , pow(p , r)), pow(p , r));
-        cout << "b is : " << endl;
-        Print_matrix(b);
-        cout << endl;
+
+        b = Modp_mult(A , x , pow(p , r));
+        b = Modp_scalmult_double( factor , b , pow(p , r));
         Matrix btrans = Transpose(b) , xrs;
-        if(!All_zeros(btrans)){
+
+        if(!All_zeros(btrans) & btrans.size() > 0){
             for(int i = 0; i < btrans.size(); i++){
                 Matrix xr = Modp_solver(A , Transpose({btrans[i]}) , p);
-                cout << "xr is: " << endl;
-                Print_matrix(xr);
-                cout << endl;
                 if (Transpose(xr).size() == 1){
                     // add p*xr with xi
                     xt[i] = Vec_add({xt[i]} , Modp_scalmult(pow(p , r-1) , Transpose(xr) , pow(p , r)) , pow(p,r))[0];
                 }
             }
         }
-        
-        if(xt.size() > 0){
-            cout << endl;
-            cout << "The x tranpose is: " << endl; 
-            Print_matrix(xt);
-            cout << endl;
-        }
-
-        x = Transpose(xt);
+        x = Horz_conc(Modp_scalmult(p , x , pow(p , r)) ,  Transpose(xt));
         return x;
     }
 }
@@ -652,9 +623,7 @@ Matrix Modp_rnull_full(const Matrix A , int p , int r){
         Matrix Ap = ApandInd.first , ApNull;
         vector<int> Indices = ApandInd.second;
         if(Ap.size() > 0){
-            cout << "Inside Modp rnull: Ap is " << endl;
-            Print_matrix(Ap);
-            ApNull = Modp_nullspace_r( Modp_scalmult_double(1.0/n , Ap , pow(p,r)) , p , r );
+            ApNull = Modp_nullspace_r( Modp_scalmult_double(1.0/n , Ap , pow(p,r)) , p , r - i);
         }
         // Building the actual nullspace eigenvector using the conversion indices of A and Ap
         Matrix ApNullt = Transpose(ApNull) , FullNullp;
@@ -710,6 +679,27 @@ void Simplify_nullspace(Matrix PermMat , Matrix& Nulls , int modn){
     }
 }
 
+void Remove_redundancy(Matrix& A , int n){
+    // Assumption here is that matrix A is a column matrix of nullspace basis
+
+    Matrix At = Transpose(A);
+    Matrix Atcop = At;
+    vector<int> ToBeRemoved;
+    // while keep adding columns
+    for(int i = 0; i < At.size(); ++i){
+        for(int j = i + 1; j < At.size() ; ++j){
+            if(All_zeros( Vec_sub({Atcop[j]} , {At[i]} , n) ) ){
+                ToBeRemoved.push_back(j);
+            }
+        }
+    }
+
+    for(int i = 0; i < ToBeRemoved.size(); i++){
+        At.erase(At.begin() + ToBeRemoved[i]);
+    }
+    A = Transpose(At);
+}
+
 // This function computes the mod n nullspace basis of A, where n is any integer!
 Matrix Nullspace_n(const Matrix A , int n){
     vector<pair<int, int>> ps = Prime_decomp(n);
@@ -720,10 +710,6 @@ Matrix Nullspace_n(const Matrix A , int n){
             int prime = ps[i].first , power = ps[i].second;
             //Matrix Nullspacei = Transpose(Modp_rnull_full(A , prime , power)) , NullsiValid;
             Matrix Nullspacei = Transpose(Modp_rnull_full(A , prime , power)) , NullsiValid;
-            cout << "The nullspace in nullspacen is: " << endl;
-            Print_matrix(Nullspacei);
-            cout << endl;
-
 
             // Checking if eigenvectors are valid , as for non-primes, there could be cases of invalid eigenvectors produced
             if(power > 1){
@@ -734,7 +720,7 @@ Matrix Nullspace_n(const Matrix A , int n){
                 }
             }
             else{
-                NullsiValid = Transpose(Nullspacei);
+                NullsiValid = Nullspacei;
             }
             NullsiValid = Modp_scalmult(n/pow(prime , power) , NullsiValid, n);
             Null = Vert_conc(Null , NullsiValid);
@@ -742,8 +728,8 @@ Matrix Nullspace_n(const Matrix A , int n){
     }
 
     Simplify_nullspace(A , Null , n);
-    cout << "Simplification done! " << endl;
     Null = Transpose(Null);
+    Remove_redundancy(Null , n);
     return Null;
 }
 
